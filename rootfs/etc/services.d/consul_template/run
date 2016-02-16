@@ -1,0 +1,5 @@
+#!/usr/bin/with-contenv sh
+
+echo "Running consul with arguments: -consul ${CONSUL_HOST} $CONSUL_TEMPLATE_DAEMON_ARGS;"
+exec consul-template -consul ${CONSUL_HOST} $CONSUL_TEMPLATE_DAEMON_ARGS;
+#exec consul-template -consul 172.17.0.1:8500 -config /config/haproxy.json

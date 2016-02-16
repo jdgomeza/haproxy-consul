@@ -1,0 +1,71 @@
+global
+    {{with $globals:= key_or_default "service/haproxy/global" "" | split "\n"}}
+    # ---- Default entries from consul KV (service/haproxy/global) ----
+    {{range $globals}}{{.}}
+    {{end}}
+    # ---- End default entries from consul KV ----
+    {{else}}# ---- Preconfigured globals (KV service/haproxy/global entries not found) ----
+    daemon
+    stats socket /var/run/haproxy.sock
+    #log /dev/log local0 notice
+    #log /dev/log local1 info
+    log 172.17.0.6 local0 notice
+    log 172.17.0.6 local1 info
+    # Distribute the health checks with a bit of randomness
+    spread-checks 5
+    maxconn {{key_or_default "service/haproxy/maxconn" "100"}}
+    {{if key_or_default "service/haproxy/debug" "false" | parseBool}}debug{{else}}#debug #To enable set KV service/haproxy/debug = true{{end}}
+    {{end}}# ---- End of preconfigured defaults ----
+
+defaults
+    {{with $globals:= key_or_default "service/haproxy/defaults" "" | split "\n"}}
+    # ---- Default entries from consul KV (service/haproxy/defaults) ----
+    {{range $globals}}{{.}}
+    {{end}}
+    # ---- End default entries from consul KV ----
+    {{else}}# ---- Preconfigured defaults (KV service/haproxy/defaults entries not found) ----
+    log global
+    retries 2
+    option  httplog
+    option  dontlognull
+    timeout connect 3000
+    timeout server 5000
+    timeout client 5000
+    {{end}}# ---- End of preconfigured defaults ----
+
+frontend http-in
+    bind *:80
+    log global
+    mode http
+    {{with $proxyDomain := key_or_default "service/haproxy/domain" (env "HOSTNAME")}}
+    {{range $i, $service := services}}#Routing service {{.Name}}
+    {{ if $service.Tags | contains "http" }}
+    acl url_app_{{.Name}} path_beg -i /{{.Name}}/
+    acl host_app_{{.Name}} hdr_dom(host) -i {{.Name}}.{{$proxyDomain}}
+    {{with key_or_default (print "service/" $service.Name "/domain") ""}}acl host_app_{{$service.Name}} hdr_dom(host) -i {{.}}{{end}}
+    http-request set-log-level info if url_app_{{.Name}} or host_app_{{.Name}}
+    use_backend service_{{.Name}} if url_app_{{.Name}} or host_app_{{.Name}}
+    {{else}}#No http service tag{{end}}
+    {{end}}
+
+{{range $i, $service := services}}#Backend configuration - service {{$service.Name}}
+{{ if $service.Tags | contains "http" }}
+backend service_{{$service.Name}}
+  mode http
+  option forwardfor
+  balance leastconn
+  option httpchk OPTIONS /
+  acl host_app_{{.Name}} hdr_dom(host) -i {{.Name}}.{{$proxyDomain}}
+  reqrep ^([^\ ]*\ /){{$service.Name}}[/]?(.*) \1\2 if !host_app_{{.Name}}
+  #Servers{{range $c,$node:=service $service.Name}}
+  server host{{$node.ID}} {{.NodeAddress}}:{{.Port}} check{{end}}
+{{else}}#No http service tag{{end}}
+{{end}}{{end}}
+
+listen stats
+    log global
+    bind *:1936
+    stats enable
+    stats uri /
+    stats hide-version
+    stats auth someuser:password

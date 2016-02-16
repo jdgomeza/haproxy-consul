@@ -1,0 +1,11 @@
+retry = "30s"
+log_level = "info"
+pid_file = "/var/run/consul_template.pid"
+wait= "5s"
+
+template {
+  source = "/config/haproxy.ctmpl"
+  destination = "/config/haproxy.cfg"
+  command = "/config/restart_proxy.sh"
+  backup = true
+}

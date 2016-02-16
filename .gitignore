@@ -1,0 +1,13 @@
+.DS_Store
+.bashrc
+.dotcloud
+.flymake*
+.git/
+.gopath/
+.hg/
+.vagrant*
+*.exe
+*.exe~
+*.orig
+*.test
+.*.swp

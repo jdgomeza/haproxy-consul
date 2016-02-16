@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv sh
+
+/usr/bin/consul-template -consul $CONSUL_HOST -template /config/haproxy.ctmpl:/config/haproxy.cfg -once
+exec haproxy $HAPROXY_DAEMON_ARGS;

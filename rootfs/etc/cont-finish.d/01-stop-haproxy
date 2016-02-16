@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv sh
+
+#Sending SIGUSR1 to soft stop the process
+kill -SIGUSR1 $(cat /var/run/haproxy.pid)
