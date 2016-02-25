@@ -1,0 +1,65 @@
+version: '2'
+
+services:
+  proxy:
+    build: .
+    environment:
+      - CONSUL_HOST=consul_server:8500
+    ports:
+      - "8080:80"
+      - "1936:1936"
+    depends_on:
+      - consul_server
+      - registrator
+    # networks:
+    #   - front
+    #   - back
+    #   - default
+
+  #Consul server
+  consul_server:
+    build:
+      context: ./consul
+      dockerfile: Dockerfile-consul
+    ports:
+      - "8500:8500"
+    command: -config-dir=/config -ui-dir=/ui -bootstrap-expect=1
+    # networks:
+    #   - back
+
+  #Registraotr service
+  registrator:
+    image: gliderlabs/registrator:master
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    command: -internal=true consul://consul_server:8500
+    depends_on:
+      - consul_server
+    # networks:
+    #   - back
+    # network_mode: "host"
+
+  #Web app
+  webapp:
+    build: ./session-app
+    ports:
+      - "3000"
+    labels:
+      - SERVICE_NAME=webapp
+      - SERVICE_TAGS=http,stateful
+      - SERVICE_3000_CHECK_HTTP=/
+      - SERVICE_3000_CHECK_INTERVAL=10s
+    # networks:
+    #   - back
+    env_file: devcloud.env
+
+# networks:
+#   front:
+#     driver: bridge
+#     driver_opts:
+#       #Add the Internet exposed IP here
+#       "com.docker.network.bridge.host_binding_ipv4": "107.170.212.162"
+#   back:
+#     driver: bridge
+#     driver_opts:
+#       com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
