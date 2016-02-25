@@ -1,4 +1,6 @@
 global
+    stats socket /var/run/haproxy.sock
+    server-state-file /config/server_state
     {{with $globals:= key_or_default "service/haproxy/global" "" | split "\n"}}
     # ---- Default entries from consul KV (service/haproxy/global) ----
     {{range $globals}}{{.}}
@@ -6,11 +8,9 @@ global
     # ---- End default entries from consul KV ----
     {{else}}# ---- Preconfigured globals (KV service/haproxy/global entries not found) ----
     daemon
-    stats socket /var/run/haproxy.sock
-    #log /dev/log local0 notice
-    #log /dev/log local1 info
-    log 172.17.0.6 local0 notice
-    log 172.17.0.6 local1 info
+    {{with key_or_default "service/haproxy/logger/server" (env "SYSLOG_HOST") }}
+    log {{.}} local0 {{key_or_default "service/haproxy/logger/level" "notice"}}
+    {{end}}
     # Distribute the health checks with a bit of randomness
     spread-checks 5
     maxconn {{key_or_default "service/haproxy/maxconn" "100"}}
@@ -18,6 +18,7 @@ global
     {{end}}# ---- End of preconfigured defaults ----
 
 defaults
+    load-server-state-from-file global
     {{with $globals:= key_or_default "service/haproxy/defaults" "" | split "\n"}}
     # ---- Default entries from consul KV (service/haproxy/defaults) ----
     {{range $globals}}{{.}}
@@ -37,7 +38,7 @@ frontend http-in
     bind *:80
     log global
     mode http
-    {{with $proxyDomain := key_or_default "service/haproxy/domain" (env "HOSTNAME")}}
+{{with $proxyDomain := key_or_default "service/haproxy/domain" (env "HOSTNAME")}}
     {{range $i, $service := services}}#Routing service {{.Name}}
     {{ if $service.Tags | contains "http" }}
     acl url_app_{{.Name}} path_beg -i /{{.Name}}/
@@ -57,13 +58,21 @@ backend service_{{$service.Name}}
   option httpchk OPTIONS /
   acl host_app_{{.Name}} hdr_dom(host) -i {{.Name}}.{{$proxyDomain}}
   reqrep ^([^\ ]*\ /){{$service.Name}}[/]?(.*) \1\2 if !host_app_{{.Name}}
+
+  {{if $service.Tags | contains "stateful"}}cookie {{key_or_default (printf "service/%s/serverCookie" .Name) "JSESSIONID"}} prefix nocache{{else}}#Stateless backend{{end}}
+
   #Servers{{range $c,$node:=service $service.Name}}
-  server host{{$node.ID}} {{.NodeAddress}}:{{.Port}} check{{end}}
-{{else}}#No http service tag{{end}}
+    server {{$node.ID}} {{$node.Address}}:{{.Port}} check {{if $service.Tags | contains "stateful"}}cookie {{$node.ID | replaceAll "~" "_"}}{{end}}
+  {{end}}
+
+{{else}}#No http service tag
 {{end}}{{end}}
+
+{{end}}{{/*end with proxyDomain*/}}
 
 listen stats
     log global
+    mode http
     bind *:1936
     stats enable
     stats uri /

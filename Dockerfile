@@ -2,7 +2,7 @@ FROM janeczku/alpine-haproxy:1.6
 
 #Environment variables
 ENV S6_OVERLAY_VERSION="v1.17.1.1" \
-    CONSUL_TEMPLATE_VERSION=0.12.2 \
+    CONSUL_TEMPLATE_VERSION="0.12.2" \
     CONSUL_HOST=172.17.0.1:8500 \
     CONSUL_TEMPLATE_DAEMON_ARGS="-config /config/haproxy.json" \
     HAPROXY_DAEMON_ARGS="-D -f /config/haproxy.cfg -p /var/run/haproxy.pid" \
@@ -11,7 +11,7 @@ ENV S6_OVERLAY_VERSION="v1.17.1.1" \
 
 # s6 overlay
 RUN apk --update add wget curl nano unzip socat \
- && wget -O /tmp/s6-overlay.tar.gz  "https://github.com/just-containers/s6-overlay/releases/download/v1.17.1.1/s6-overlay-amd64.tar.gz" \
+ && wget -O /tmp/s6-overlay.tar.gz  "https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz" \
  && tar xvfz /tmp/s6-overlay.tar.gz -C / \
  && rm -f /tmp/s6-overlay.tar.gz \
  # && curl -o /tmp/consul_template.zip --insecure https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip \
