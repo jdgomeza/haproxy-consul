@@ -65,3 +65,8 @@ If running `Registrator`, [just add labels](http://gliderlabs.com/registrator/la
 ## Tests
 
 TODO
+
+
+## Template configurations
+
+TODO
