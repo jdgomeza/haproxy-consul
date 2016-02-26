@@ -71,4 +71,14 @@ TODO
 
 ## Template configurations
 
-TODO
+
+Consul KV  | Description | Example
+---------- | ------- | -------
+`KV/service/haproxy/global`| Override properties in global section | ` log /dev/log local0`
+`KV/service/haproxy/defaults`| Override properties in default section | ` log /dev/log local0`
+`service/haproxy/domain` | Defines the domain base for all the services `service.<domain>`. $HOSTNAME by Default | `example.com`
+`KV/service/<service.Name>/domain` | Overrides the server domain only for the `service.Name` | `myapp.com`
+`KV/service/<service.Name>/serverCookie` | Defines the server cookie name used for session afinity. JSESSION by default | `mycookie`
+
+
+TODO - Add curl examples how to update these properties

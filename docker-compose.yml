@@ -51,7 +51,7 @@ services:
       - SERVICE_3000_CHECK_INTERVAL=10s
     # networks:
     #   - back
-    env_file: devcloud.env
+    # env_file: devcloud.env
 
 # networks:
 #   front:
