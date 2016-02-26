@@ -6,7 +6,7 @@ services:
     environment:
       - CONSUL_HOST=consul_server:8500
     ports:
-      - "8080:80"
+      - "80:80"
       - "1936:1936"
     depends_on:
       - consul_server
