@@ -2,6 +2,8 @@
 
 This image intention is to put together the best practices around the `HAProxy - Consul` set up in order to create a truly turnkey dynamic load balancer solution for docker containers.
 
+[![](https://badge.imagelayers.io/jdgomeza/haproxy-consul:latest.svg)](https://imagelayers.io/?images=jdgomeza/haproxy-consul 'Get your own badge on imagelayers.io') [![Docker Pulls](https://img.shields.io/docker/pulls/jdgomeza/haproxy-consul.svg)](https://hub.docker.com/r/jdgomeza/haproxy-consul/)
+
 ## Versions
 
 - HAProxy 1.6.3 (Based on Alpine janeczku/alpine-haproxy:1.6.3)
