@@ -27,6 +27,4 @@ COPY rootfs /
 
 EXPOSE 80 1936
 
-#https://github.com/just-containers/s6-overlay/releases/download/v1.17.1.1/s6-overlay-amd64.tar.gz
-# https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz \
 ENTRYPOINT ["/init"]
